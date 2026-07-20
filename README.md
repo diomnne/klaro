@@ -2,6 +2,8 @@
 
 A personal portfolio site showcasing artwork across multiple mediums, built to attract potential clients and commissions.
 
+> **Status: pre-alpha.** The app is not yet scaffolded — there is no runnable code in this repo yet. Everything below describes the intended design. The Quickstart will work once the Next.js app is initialized.
+
 ## Live Demo
 
 🚧 Not yet deployed — a live preview link will be added here once the app is connected to Vercel.
@@ -9,6 +11,10 @@ A personal portfolio site showcasing artwork across multiple mediums, built to a
 _Screenshot preview coming once the gallery UI is scaffolded._
 
 ## Quickstart
+
+⚠️ **Not yet functional.** There is no `package.json` in the repo, so `npm install` will fail. These are the commands that will work once the app is scaffolded.
+
+Requires [Node.js](https://nodejs.org/) 18.17 or later.
 
 ```bash
 git clone https://github.com/diomnne/art-portfolio.git
@@ -20,6 +26,8 @@ npm run dev
 Then open [http://localhost:3000](http://localhost:3000).
 
 ## Usage
+
+_None of the routes below are built yet — this is the planned page structure._
 
 **Pages**
 
@@ -34,9 +42,7 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 **Gallery Mode**
 
-An optional 3D, interactive way to browse the Works gallery — artwork is placed on virtual frames in a navigable 3D space instead of a flat grid. Falls back to the standard grid layout on smaller screens.
-
-_Exact commands and routes will be filled in as each page is scaffolded._
+A planned optional 3D, interactive way to browse the Works gallery — artwork would be placed on virtual frames in a navigable 3D space instead of a flat grid, falling back to the standard grid layout on smaller screens. Still exploratory; may change or be cut.
 
 ## Configuration / Environment
 
