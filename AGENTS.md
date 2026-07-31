@@ -62,6 +62,8 @@ public/                 static assets
 - Components are added via `npx shadcn add [component]` into `components/ui/` — treat them as owned, editable code, not a black box.
 - Check `git diff` before re-running `add` on a component you've already customized, so you don't silently overwrite your edits.
 - Compose primitives into feature-level components rather than using raw shadcn components directly in pages.
+- Select/dropdown triggers must always render the option's human-readable label, never the underlying enum/key value (e.g. show "Pet Portrait", not `petPortrait`) — verify this for every dropdown, not just at a glance.
+- Native `<input type="file">` elements must never ship with unstyled default browser chrome — restyle with Tailwind `file:` classes, or hide the native input and trigger it via a styled `Button`.
 
 ## Code Style
 
@@ -72,6 +74,10 @@ public/                 static assets
 - **Exports:** named exports for everything except pages/layouts/route handlers, where Next.js requires a default export. Named exports make refactors and auto-imports more reliable.
 - **Comments:** explain *why*, not *what*. If a comment just restates the code, delete the comment or rewrite the code to be self-explanatory.
 - **Error handling:** no silent `catch {}` blocks. User-facing failures get a real fallback (loading/error states, `error.tsx` boundaries), not a console.log and a shrug.
+
+## Calculated Values / Formulas
+
+- When adapting a formula from one entity to a structurally different one (e.g. reusing a portrait's pricing formula for a different commission type), don't assume the same underlying assumptions carry over. Write the zero/boundary-value test case first, before implementing — before trusting the math.
 
 ## Commits
 
