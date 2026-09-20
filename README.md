@@ -1,14 +1,14 @@
-# Art Portfolio
+# Klaro
 
-A personal portfolio site showcasing artwork across multiple mediums, built to attract potential clients and commissions.
+An AI-powered commission intake and handoff tool for independent creatives in the Philippines. Klaro takes unstructured chat messages and turns them into a clear, structured agreement (Scope of Work) and evidence checklist before work begins. It witnesses and documents the terms—it does not price or judge them.
 
-> **Status: pre-alpha.** The app is not yet scaffolded — there is no runnable code in this repo yet. Everything below describes the intended design. The Quickstart will work once the Next.js app is initialized.
+> **Status: pre-alpha.** The app is not yet scaffolded — there is no runnable code in this repo yet. Everything below describes the intended design for the FlyRank AI frontend track capstone project. 
 
 ## Live Demo
 
 🚧 Not yet deployed — a live preview link will be added here once the app is connected to Vercel.
 
-_Screenshot preview coming once the gallery UI is scaffolded._
+_Screenshot preview coming once the intake UI is scaffolded._
 
 ## Quickstart
 
@@ -17,8 +17,8 @@ _Screenshot preview coming once the gallery UI is scaffolded._
 Requires [Node.js](https://nodejs.org/) 18.17 or later.
 
 ```bash
-git clone https://github.com/diomnne/art-portfolio.git
-cd art-portfolio
+git clone https://github.com/diomnne/klaro.git
+cd klaro
 npm install
 npm run dev
 ```
@@ -33,27 +33,38 @@ _None of the routes below are built yet — this is the planned page structure._
 
 | Route | Page | Description |
 |---|---|---|
-| `/` | Home | Introduction and featured work |
-| `/about` | About | Artist bio and process |
-| `/works` | Works | Full gallery of artwork, organized by medium |
-| `/works/[slug]` | — | Detail view for an individual piece |
-| `/commission` | Commission | Rates, process, and how to request a piece |
-| `/contact` | Contact | Direct way for clients to get in touch |
+| `/` | Intake View | The main interface. A text area for pasting raw chat logs and interacting with the AI to fill in missing agreement gaps. |
+| `/api/chat` | AI Endpoint | Server route handling the Vercel AI SDK, Claude API, and structured tool calling (`generate_commission_agreement` and `check_agreement_completeness`). |
+| `/agreement/[id]` | Shareable Link | A server-rendered, read-only view of the final agreement and evidence checklist. Includes a print stylesheet for native PDF exports. |
 
-**Gallery Mode**
+**The Klaro Workflow**
 
-A planned optional 3D, interactive way to browse the Works gallery — artwork would be placed on virtual frames in a navigable 3D space instead of a flat grid, falling back to the standard grid layout on smaller screens. Still exploratory; may change or be cut.
+1. **The Data Dump:** The artist pastes a messy, informal client chat thread (e.g., from Messenger or Instagram) into the main text area.
+2. **The Witness:** The AI parses the text and extracts key terms (deliverables, deadlines, revisions). If critical protective terms are missing (like a downpayment or delivery method), Klaro flags them and asks a follow-up question.
+3. **The Verification:** The extracted data populates an editable interactive card. The artist reviews, corrects any AI misinterpretations, and finalizes the terms.
+4. **The Handoff:** The app generates a clean, mobile-responsive web link (`/agreement/[id]`) that the artist can send back to the client as a formal "receipt" (Scope of Work) before beginning the artwork.
 
 ## Configuration / Environment
 
-No environment variables are required yet. Once a contact form or email service is added, required variables will be documented here and an `.env.local.example` file will list their names (without values).
+To run this project locally once scaffolded, you will need to configure environment variables for the AI provider and database. An `.env.local.example` file will be provided with the following required keys:
+
+```env
+# AI Provider
+ANTHROPIC_API_KEY=your_claude_api_key
+
+# Database (Supabase)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
 
 ## Tech Stack
 
 - Next.js (App Router) + TypeScript
+- Vercel AI SDK + Claude API (Anthropic)
 - Tailwind CSS
 - shadcn/ui
-- React Three Fiber + drei (3D Gallery Mode)
+- Zod (for AI tool schema validation)
+- Supabase (PostgreSQL + Row Level Security for storing generated links)
 - Deployed on Vercel
 
 ## License
