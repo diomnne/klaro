@@ -1,20 +1,20 @@
 # Klaro
 
-An AI-powered commission intake and handoff tool for independent creatives in the Philippines. Klaro takes unstructured chat messages and turns them into a clear, structured agreement (Scope of Work) and evidence checklist before work begins. It witnesses and documents the terms—it does not price or judge them.
+An AI-powered commission agreement tool for independent visual artists in the Philippines. Klaro takes an artist's account of a client's request, or the client's pasted chat, and turns it into a clear written agreement and an evidence checklist before work begins. It documents the terms. It does not price or judge them, and it is not a legally binding contract.
 
-> **Status: pre-alpha.** The app is not yet scaffolded — there is no runnable code in this repo yet. Everything below describes the intended design for the FlyRank AI frontend track capstone project. 
+> **Status: pre-alpha.** The skeleton is scaffolded and the routes below exist as placeholders, but the AI chat, the tool calls, and the agreement logic are not built yet. Everything under Usage describes the intended behavior.
 
 ## Live Demo
 
 🚧 Not yet deployed — a live preview link will be added here once the app is connected to Vercel.
 
-_Screenshot preview coming once the intake UI is scaffolded._
+_Screenshot preview coming once the draft view is functional._
 
 ## Quickstart
 
-⚠️ **Not yet functional.** There is no `package.json` in the repo, so `npm install` will fail. These are the commands that will work once the app is scaffolded.
+⚠️ **Placeholders only.** The routes below render, but the chat doesn't call Claude yet.
 
-Requires [Node.js](https://nodejs.org/) 18.17 or later.
+Requires [Node.js](https://nodejs.org/) 20.9 or later.
 
 ```bash
 git clone https://github.com/diomnne/klaro.git
@@ -27,35 +27,42 @@ Then open [http://localhost:3000](http://localhost:3000).
 
 ## Usage
 
-_None of the routes below are built yet — this is the planned page structure._
+_Chat, agreement extraction, and completeness checking are not wired up yet — this is the planned behavior._
 
 **Pages**
 
 | Route | Page | Description |
 |---|---|---|
-| `/` | Intake View | The main interface. A text area for pasting raw chat logs and interacting with the AI to fill in missing agreement gaps. |
-| `/api/chat` | AI Endpoint | Server route handling the Vercel AI SDK, Claude API, and structured tool calling (`generate_commission_agreement` and `check_agreement_completeness`). |
-| `/agreement/[id]` | Shareable Link | A server-rendered, read-only view of the final agreement and evidence checklist. Includes a print stylesheet for native PDF exports. |
+| `/` | Landing | Hero, a "how it works" summary, and a link to `/draft`. |
+| `/draft` | Draft an agreement | The main interface: chat, agreement card, and evidence checklist. Paste a client's chat or describe the request, then chat with the AI to fill in missing terms. |
+| `/about` | About | What Klaro does, what it doesn't do, and what happens to a pasted chat. |
+| `/api/chat` | AI endpoint | Server route handling the Vercel AI SDK, Claude API, and structured tool calling (`generate_commission_agreement` and `check_agreement_completeness`). |
+| `/health` | System health | Renders the status returned by `/api/health`. |
+| `/api/health` | Health check | Reports app status and whether the Claude API key is configured. |
 
 **The Klaro Workflow**
 
-1. **The Data Dump:** The artist pastes a messy, informal client chat thread (e.g., from Messenger or Instagram) into the main text area.
-2. **The Witness:** The AI parses the text and extracts key terms (deliverables, deadlines, revisions). If critical protective terms are missing (like a downpayment or delivery method), Klaro flags them and asks a follow-up question.
-3. **The Verification:** The extracted data populates an editable interactive card. The artist reviews, corrects any AI misinterpretations, and finalizes the terms.
-4. **The Handoff:** The app generates a clean, mobile-responsive web link (`/agreement/[id]`) that the artist can send back to the client as a formal "receipt" (Scope of Work) before beginning the artwork.
+1. **The Data Dump:** The artist pastes a messy client chat (Messenger, Instagram, Discord) or describes the request in their own words.
+2. **The Gap Check:** The AI extracts key terms (deliverables, deadline, revisions, payment, delivery, usage rights) and asks about anything missing. Risky or missing terms, like no down payment, are flagged as warnings. They never block the artist from continuing.
+3. **The Verification:** The extracted terms populate an editable card. The artist reviews, corrects any AI misinterpretations, and finalizes it.
+4. **The Handoff:** The artist copies the agreement text and sends it back to the client in the same chat, and keeps the evidence checklist. Drafts are saved in the browser, so a refresh doesn't lose them.
+
+**Not in v1**
+
+- No pricing or valuation. Klaro records the terms an artist and client agreed on and never suggests what a commission is worth.
+- Not a contract. No legal enforceability and no e-signatures; it produces a written record.
+- No accounts or database. It's single-user, and nothing is stored on a server.
+- No payment processing or escrow.
 
 ## Configuration / Environment
 
-To run this project locally once scaffolded, you will need to configure environment variables for the AI provider and database. An `.env.local.example` file will be provided with the following required keys:
+An `.env.local.example` file will be provided with the required key:
 
 ```env
-# AI Provider
 ANTHROPIC_API_KEY=your_claude_api_key
-
-# Database (Supabase)
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
+
+`/health` reports whether this key is set, without revealing its value.
 
 ## Tech Stack
 
@@ -64,7 +71,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 - Tailwind CSS
 - shadcn/ui
 - Zod (for AI tool schema validation)
-- Supabase (PostgreSQL + Row Level Security for storing generated links)
 - Deployed on Vercel
 
 ## License
