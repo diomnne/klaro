@@ -10,7 +10,7 @@ Shared instructions for AI coding agents (Claude Code, Cursor, Antigravity) work
 
 ## Project Overview
 
-An art portfolio site to showcase artworks across different mediums, aimed at attracting potential clients for commissions/hires.
+An AI-powered commission agreement tool for independent visual artists in the Philippines.
 
 ## Tech Stack
 

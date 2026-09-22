@@ -1,26 +1,130 @@
 @import "tailwindcss";
 
+/* Tokens live on .dark, so the dark: variant must follow the class, not the
+   OS media query that Tailwind v4 defaults to. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f2ea;
+  --foreground: #292e11;
+  --card: #fafbf9;
+  --card-foreground: #22263b;
+  --muted: #d9e6dc;
+  --muted-foreground: #656b48;
+  --border: #cfdbd0;
+  --input: #c3d4cc;
+  --primary: #f06d3d;
+  --primary-foreground: #fffbf5;
+  --destructive: #b3261e;
+  --ring: #5b3e8c;
+
+  /* Klaro-specific: marks a term the client never stated. */
+  --gap: #d8dffe;
+  --gap-foreground: #22263b;
+
+  --radius: 0.5rem;
+  --radius-sheet: 3px;
+  --radius-bubble: 0.75rem;
+
+  --shadow-sheet:
+    0 1px 0 rgb(34 38 59 / 0.08), 0 18px 28px -20px rgb(34 38 59 / 0.45);
+}
+
+.dark {
+  --background: #151924;
+  --foreground: #e8eaf2;
+  --card: #1f2432;
+  --card-foreground: #e8eaf2;
+  --muted: #0f121a;
+  --muted-foreground: #a3a9bc;
+  --border: #343b52;
+  --input: #343b52;
+  --primary: #b79cf0;
+  --primary-foreground: #17112a;
+  --destructive: #ff8f80;
+  --ring: #b79cf0;
+
+  --gap: rgba(242, 194, 48, 0.32);
+  --gap-foreground: #f3ebcb;
+
+  /* Softer against a dark ground: pure black reads as depth, not grime. */
+  --shadow-sheet:
+    0 1px 0 rgb(0 0 0 / 0.24), 0 18px 28px -20px rgb(0 0 0 / 0.72);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-destructive: var(--destructive);
+  --color-ring: var(--ring);
+  --color-gap: var(--gap);
+  --color-gap-foreground: var(--gap-foreground);
+
+  --font-sans:
+    var(--font-rethink), "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-serif: var(--font-newsreader), "Iowan Old Style", Georgia, serif;
+
+  --radius-sheet: var(--radius-sheet);
+  --radius-bubble: var(--radius-bubble);
+
+  --shadow-sheet: var(--shadow-sheet);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Fluid headline scale for the hero and page titles. */
+.text-headline {
+  font-size: clamp(2rem, 1.35rem + 2.8vw, 3.5rem);
+  line-height: 1.1;
+}
+
+.text-title {
+  font-size: clamp(1.5rem, 1.25rem + 1.1vw, 2rem);
+  line-height: 1.2;
+}
+
+/* Hero agreement card entrance. CSS-only so it costs no JS and cannot delay LCP. */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-rise {
+  animation: hero-rise 500ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
