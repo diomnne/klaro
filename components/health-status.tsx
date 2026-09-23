@@ -96,8 +96,8 @@ export function HealthStatus() {
         <HealthRow label="Environment" value={health.environment} />
         <HealthRow label="Checked at" value={formatCheckedAt(health.checkedAt)} />
         <HealthRow
-          label="Claude API key configured"
-          value={health.checks.anthropicApiKeyConfigured ? 'Yes' : 'No'}
+          label="Gemini API key configured"
+          value={health.checks.geminiApiKeyConfigured ? 'Yes' : 'No'}
         />
       </dl>
       <HealthButton onClick={refresh}>Refresh</HealthButton>

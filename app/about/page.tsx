@@ -35,13 +35,18 @@ export default function About() {
           </p>
         </section>
 
-        {/* TODO: rewrite */}
+        {/* TODO: revisit if we move to a paid tier */}
         <section aria-labelledby="what-happens-to-your-chat" className="flex flex-col gap-2">
           <h2 className="text-lg font-medium text-foreground" id="what-happens-to-your-chat">
             What happens to your chat
           </h2>
           <p className="font-serif text-base text-muted-foreground">
-            Pasted text is sent to Claude to be processed. Drafts are saved in your browser only.
+            Whatever you paste or type is sent to Google&rsquo;s Gemini API to be processed. Klaro
+            currently runs on Gemini&rsquo;s free tier, and Google&rsquo;s terms allow free-tier
+            prompts to be used to improve its own products for users outside the EU, UK, and
+            Switzerland. The Philippines is not covered by that exception, so please don&rsquo;t
+            paste anything you wouldn&rsquo;t want read by someone else. Your drafts themselves are
+            saved in your browser only.
           </p>
         </section>
       </main>

@@ -3,7 +3,7 @@ import { version } from '@/package.json';
 export type HealthStatus = 'ok' | 'degraded';
 
 export type HealthChecks = {
-  anthropicApiKeyConfigured: boolean;
+  geminiApiKeyConfigured: boolean;
 };
 
 export type Health = {
@@ -19,11 +19,11 @@ export type Health = {
  * Reports whether the app's own configuration is complete. Checks are booleans
  * only — never the secret values themselves, since this is served publicly.
  * No outbound calls: presence of a key is not proof it works, and a health
- * check that bills the Anthropic API is a health check nobody can poll.
+ * check that bills the Gemini API is a health check nobody can poll.
  */
 export function getHealth(): Health {
   const checks: HealthChecks = {
-    anthropicApiKeyConfigured: Boolean(process.env.ANTHROPIC_API_KEY),
+    geminiApiKeyConfigured: Boolean(process.env.GOOGLE_GENERATIVE_AI_API_KEY),
   };
 
   const status: HealthStatus = Object.values(checks).every(Boolean)
