@@ -1,5 +1,10 @@
 import { google } from '@ai-sdk/google';
-import { convertToModelMessages, streamText, type UIMessage } from 'ai';
+import {
+  convertToModelMessages,
+  smoothStream,
+  streamText,
+  type UIMessage,
+} from 'ai';
 
 import { MODEL_ID, MODEL_OPTIONS, SYSTEM_PROMPT } from '@/lib/ai/klaro';
 
@@ -36,6 +41,15 @@ export async function POST(req: Request): Promise<Response> {
     system: SYSTEM_PROMPT,
     messages: await convertToModelMessages(messages),
     ...MODEL_OPTIONS,
+    // Gemini sends 15–20 words per chunk, which lands on screen in visible
+    // jumps. Re-chunking into words makes the reply type out evenly.
+    experimental_transform: smoothStream(),
+    // Gemini's free tier returns "high demand" often enough that the default
+    // retries get exhausted in normal use. Logged server-side so a silent
+    // failure is diagnosable; the artist only ever sees the generic string.
+    onError: ({ error }) => {
+      console.error('[chat] stream failed:', error);
+    },
   });
 
   return result.toUIMessageStreamResponse({
