@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 
+import { ChatPanel } from '@/components/draft/chat-panel';
+
 export const metadata: Metadata = {
   title: 'Draft an agreement — Klaro',
   description:
@@ -16,15 +18,7 @@ export default function Draft() {
         </h1>
 
         <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
-          {/* Placeholder: chat */}
-          <section
-            aria-label="Chat"
-            className="flex min-h-40 flex-col rounded-sheet border border-dashed border-border bg-card p-6"
-          >
-            <h2 className="text-sm font-medium text-muted-foreground">
-              Chat
-            </h2>
-          </section>
+          <ChatPanel />
 
           <div className="flex flex-col gap-6">
             {/* Placeholder: agreement card */}
