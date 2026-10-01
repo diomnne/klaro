@@ -1,4 +1,8 @@
 @import "tailwindcss";
+/* Supplies animate-in/animate-out, which shadcn primitives use for enter and
+   exit transitions. Tailwind v4 has no built-in equivalent, so without this
+   those classes compile to nothing and the animations silently don't run. */
+@import "tw-animate-css";
 
 /* Tokens live on .dark, so the dark: variant must follow the class, not the
    OS media query that Tailwind v4 defaults to. */
