@@ -41,12 +41,12 @@ export default function About() {
             What happens to your chat
           </h2>
           <p className="font-serif text-base text-muted-foreground">
-            Whatever you paste or type is sent to Google&rsquo;s Gemini API to be processed. Klaro
-            currently runs on Gemini&rsquo;s free tier, and Google&rsquo;s terms allow free-tier
-            prompts to be used to improve its own products for users outside the EU, UK, and
-            Switzerland. The Philippines is not covered by that exception, so please don&rsquo;t
-            paste anything you wouldn&rsquo;t want read by someone else. Your drafts themselves are
-            saved in your browser only.
+            Pasted text is sent to Google&rsquo;s Gemini API to be processed. Klaro uses
+            Gemini&rsquo;s free tier, and Google&rsquo;s terms allow free-tier prompts to be used to
+            improve its products for users outside the EU, UK, and Switzerland &mdash; the
+            Philippines isn&rsquo;t covered by that exception. Leave out anything you wouldn&rsquo;t
+            want stored elsewhere, like the client&rsquo;s address, phone number, or payment
+            details. Drafts themselves are saved in your browser only.
           </p>
         </section>
       </main>
