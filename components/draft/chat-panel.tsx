@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, type UIMessage } from 'ai';
+import { DefaultChatTransport } from 'ai';
 import { MotionConfig } from 'motion/react';
 import { Fragment, useEffect, useRef, useState } from 'react';
 
@@ -24,25 +24,45 @@ import {
   PromptInputTextarea,
 } from '@/components/ai-elements/prompt-input';
 import { Shimmer } from '@/components/ai-elements/shimmer';
+import { ScamCheckCard } from '@/components/draft/scam-check-card';
 import { Button } from '@/components/ui/button';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
+import type { KlaroUIMessage } from '@/lib/ai/klaro';
 import { loadMessages, saveMessages } from '@/lib/chat-storage';
+import { redact } from '@/lib/redact';
 
 /**
- * Joins a message's text parts. Only used to tell whether the assistant has
- * produced any visible text yet — rendering goes part by part.
+ * Whether the assistant has produced anything to show yet: text, or the scam
+ * check's card. Only decides when the placeholder can step aside; rendering
+ * goes part by part.
  */
-function messageText(message: UIMessage): string {
-  return message.parts
-    .filter(
-      (part): part is { type: 'text'; text: string } => part.type === 'text',
-    )
-    .map((part) => part.text)
-    .join('');
+function hasVisibleContent(message: KlaroUIMessage): boolean {
+  return message.parts.some(
+    (part) =>
+      (part.type === 'text' && part.text !== '') ||
+      part.type === 'tool-checkScamSignals',
+  );
+}
+
+/**
+ * Review flags, read from the page URL when each request is sent (including a
+ * retry), so a reviewer can force the scam check to fail (`?toolError=1`) or
+ * slow it down enough to watch every state (`?toolSlow=1`) on a live preview.
+ */
+function reviewFlags(): { simulateToolError: boolean; simulateSlowTool: boolean } {
+  const params = new URLSearchParams(window.location.search);
+
+  return {
+    simulateToolError: params.get('toolError') === '1',
+    simulateSlowTool: params.get('toolSlow') === '1',
+  };
 }
 
 /** Stateless, so one instance is shared rather than rebuilt on every render. */
-const transport = new DefaultChatTransport({ api: '/api/chat' });
+const transport = new DefaultChatTransport<KlaroUIMessage>({
+  api: '/api/chat',
+  body: reviewFlags,
+});
 
 /**
  * How long a stream may produce nothing before it's treated as dead. Generous
@@ -53,7 +73,7 @@ const STALL_TIMEOUT_MS = 25_000;
 
 export function ChatPanel() {
   const { messages, sendMessage, status, stop, regenerate, setMessages } =
-    useChat({ transport });
+    useChat<KlaroUIMessage>({ transport });
 
   // MotionConfig below only covers transform/size animations, and the
   // scroll-to-bottom spring is JS-driven, so both need the preference directly.
@@ -79,7 +99,9 @@ export function ChatPanel() {
     const saved = loadMessages();
 
     if (saved) {
-      setMessages(saved);
+      // loadMessages shape-checks the transcript but can't know Klaro's tool
+      // types; this is the trust boundary for what localStorage hands back.
+      setMessages(saved as KlaroUIMessage[]);
     }
 
     setReady(true);
@@ -118,13 +140,14 @@ export function ChatPanel() {
 
   const lastMessage = messages.at(-1);
 
-  // The shimmer holds the assistant's slot until there is actually text to show.
-  // Checking the text rather than just `status === 'submitted'` covers the gap
-  // where the assistant message exists but its first chunk hasn't landed —
-  // otherwise the shimmer unmounts into an empty bubble for a frame.
+  // The shimmer holds the assistant's slot until there is actually something to
+  // show: text, or the scam check's card. Checking the parts rather than just
+  // `status === 'submitted'` covers the gap where the assistant message exists
+  // but its first chunk hasn't landed — otherwise the shimmer unmounts into an
+  // empty bubble for a frame.
   const awaitingFirstToken =
     isStreaming &&
-    (lastMessage?.role !== 'assistant' || messageText(lastMessage) === '');
+    (lastMessage?.role !== 'assistant' || !hasVisibleContent(lastMessage));
 
   return (
     <MotionConfig reducedMotion="user">
@@ -149,11 +172,13 @@ export function ChatPanel() {
             ) : null}
 
             {messages.map((message, index) => {
+              const isLastMessage = index === messages.length - 1;
+
               // While the shimmer stands in for it, skip the not-yet-filled
               // assistant message so the two don't both occupy the slot.
               const isPlaceholder =
                 awaitingFirstToken &&
-                index === messages.length - 1 &&
+                isLastMessage &&
                 message.role === 'assistant';
 
               if (isPlaceholder) {
@@ -182,9 +207,19 @@ export function ChatPanel() {
                           ) : (
                             <Fragment key={key}>{part.text}</Fragment>
                           );
-                        // Tool parts will render here in the tool-calling
-                        // assignment. Until then, step markers and any other part
-                        // types are skipped.
+                        case 'tool-checkScamSignals':
+                          return (
+                            <ScamCheckCard
+                              isLive={isStreaming && isLastMessage}
+                              key={key}
+                              onRetry={
+                                isLastMessage ? () => regenerate() : undefined
+                              }
+                              part={part}
+                              retryDisabled={isStreaming}
+                            />
+                          );
+                        // Step markers and any other part types are skipped.
                         default:
                           return null;
                       }
@@ -270,7 +305,9 @@ export function ChatPanel() {
                 stop();
               }
 
-              sendMessage({ text });
+              // Redacted before sending, and the transcript renders the sent
+              // text, so what the artist sees is exactly what left the browser.
+              sendMessage({ text: redact(text) });
             }}
           >
             <PromptInputBody>
