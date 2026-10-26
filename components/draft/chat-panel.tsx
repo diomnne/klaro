@@ -27,6 +27,7 @@ import { Shimmer } from '@/components/ai-elements/shimmer';
 import { Button } from '@/components/ui/button';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { loadMessages, saveMessages } from '@/lib/chat-storage';
+import { redact } from '@/lib/redact';
 
 /**
  * Joins a message's text parts. Only used to tell whether the assistant has
@@ -270,7 +271,9 @@ export function ChatPanel() {
                 stop();
               }
 
-              sendMessage({ text });
+              // Redacted before sending, and the transcript renders the sent
+              // text, so what the artist sees is exactly what left the browser.
+              sendMessage({ text: redact(text) });
             }}
           >
             <PromptInputBody>
