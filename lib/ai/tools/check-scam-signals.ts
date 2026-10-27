@@ -204,6 +204,49 @@ export type ScamCheckResult = {
   neverDo: string[];
 };
 
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((item) => typeof item === 'string');
+}
+
+/**
+ * Whether a value really is a scam-check result. The card trusts this instead
+ * of the type: a result can come from a saved transcript, an older version of
+ * the app, or a tool that misbehaved, and rendering a malformed one would crash
+ * the chat. Extra fields are allowed; a missing or mistyped one is not.
+ */
+export function isScamCheckResult(value: unknown): value is ScamCheckResult {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const { level, signals, safeSteps, neverDo } = value as Record<string, unknown>;
+
+  return (
+    (level === 'few' || level === 'some' || level === 'many') &&
+    Array.isArray(signals) &&
+    signals.every((signal) => {
+      if (typeof signal !== 'object' || signal === null) {
+        return false;
+      }
+
+      const { id, label, evidence, explanation } = signal as Record<
+        string,
+        unknown
+      >;
+
+      return (
+        typeof id === 'string' &&
+        (SIGNAL_IDS as readonly string[]).includes(id) &&
+        typeof label === 'string' &&
+        typeof evidence === 'string' &&
+        typeof explanation === 'string'
+      );
+    }) &&
+    isStringArray(safeSteps) &&
+    isStringArray(neverDo)
+  );
+}
+
 /**
  * Two low signals stay "few": gift commissions with generic praise are common
  * and shouldn't be flagged. One high signal alone is "some".
@@ -468,11 +511,14 @@ const inputSchema = z.object({
 export function createCheckScamSignalsTool({
   clientMessage,
   simulateError = false,
+  simulateBadResult = false,
 }: {
   /** The text of the most recent user message: the client's DM as the artist pasted it. */
   clientMessage: string;
   /** Set by the `?toolError=1` review flag so the error state can be seen on a live preview. */
   simulateError?: boolean;
+  /** Set by `?fail=bad-tool`: returns a result that isn't a ScamCheckResult, so the card's shape check can be seen. */
+  simulateBadResult?: boolean;
 }) {
   return tool({
     description:
@@ -487,6 +533,11 @@ export function createCheckScamSignalsTool({
         throw new Error(
           'Simulated scam-check failure (simulateToolError flag).',
         );
+      }
+
+      if (simulateBadResult) {
+        // Deliberately the wrong shape in several ways at once.
+        return { level: 'catastrophic', signals: 'none found' } as unknown as ScamCheckResult;
       }
 
       return scoreScamSignals(signals, clientMessage);
