@@ -5,6 +5,7 @@ import {
   SIGNALS,
   SIGNAL_GUARDS,
   createCheckScamSignalsTool,
+  isScamCheckResult,
   repairSignalsInput,
   scoreScamSignals,
   type SignalId,
@@ -510,6 +511,93 @@ describe('repairSignalsInput', () => {
   });
 });
 
+describe('isScamCheckResult', () => {
+  const valid = {
+    level: 'some',
+    signals: [
+      {
+        id: 'urgency',
+        label: 'Pressure to hurry',
+        evidence: 'reply ASAP',
+        explanation: 'Tight deadlines are often real.',
+      },
+    ],
+    safeSteps: [PAYMENT_SAFE_STEP],
+    neverDo: [],
+  };
+
+  it('accepts a well-formed result, and ignores extra fields', () => {
+    expect(isScamCheckResult(valid)).toBe(true);
+    expect(isScamCheckResult({ ...valid, extra: 1 })).toBe(true);
+  });
+
+  it('accepts the empty result', () => {
+    expect(
+      isScamCheckResult({ level: 'few', signals: [], safeSteps: [], neverDo: [] }),
+    ).toBe(true);
+  });
+
+  it.each([null, undefined, 'few', 42, true, [], () => 1])(
+    'rejects a non-object (%s)',
+    (value) => {
+      expect(isScamCheckResult(value)).toBe(false);
+    },
+  );
+
+  it.each<[string, unknown]>([
+    ['a missing level', { ...valid, level: undefined }],
+    ['an unknown level', { ...valid, level: 'catastrophic' }],
+    ['a wrong-case level', { ...valid, level: 'Few' }],
+    ['signals that is not an array', { ...valid, signals: 'none found' }],
+    ['missing signals', { ...valid, signals: undefined }],
+    ['a null signal', { ...valid, signals: [null] }],
+    ['a signal with an unknown id', { ...valid, signals: [{ ...valid.signals[0], id: 'vibes' }] }],
+    ['a signal with no label', { ...valid, signals: [{ ...valid.signals[0], label: undefined }] }],
+    ['a signal with numeric evidence', { ...valid, signals: [{ ...valid.signals[0], evidence: 7 }] }],
+    ['a signal with no explanation', { ...valid, signals: [{ ...valid.signals[0], explanation: null }] }],
+    ['safeSteps that is not an array', { ...valid, safeSteps: 'wait' }],
+    ['a non-string safe step', { ...valid, safeSteps: [PAYMENT_SAFE_STEP, 3] }],
+    ['neverDo that is not an array', { ...valid, neverDo: null }],
+    ['a non-string never-do item', { ...valid, neverDo: [{}] }],
+  ])('rejects %s', (_, value) => {
+    expect(isScamCheckResult(value)).toBe(false);
+  });
+
+  describe('stays in step with what scoreScamSignals returns', () => {
+    const allIds = Object.keys(SIGNALS) as SignalId[];
+
+    it.each<[string, SignalId[]]>([
+      ['no signals', []],
+      ['one low signal', ['urgency']],
+      ['two low signals', ['urgency', 'generic_praise']],
+      ['one high signal', ['overpayment_or_refund']],
+      ['the overpayment never-do', ['overpayment_or_refund']],
+      ['the code-request never-do', ['code_or_credentials_request']],
+      ['the fee never-do', ['crypto_or_fee_to_receive']],
+      ['the payment-link never-do', ['payment_link']],
+      ['a mix reaching "many"', ['overpayment_or_refund', 'urgency', 'generic_praise']],
+      ['every signal at once', allIds],
+    ])('for %s', (_, ids) => {
+      const result = scoreScamSignals(signals(...ids), MESSAGE);
+
+      expect(isScamCheckResult(result)).toBe(true);
+    });
+
+    it('for signals the model invented and evidence that is not in the message', () => {
+      const result = scoreScamSignals(
+        [{ id: 'urgency', evidence: 'not in the message' }],
+        MESSAGE,
+      );
+
+      expect(isScamCheckResult(result)).toBe(true);
+    });
+
+    it('for an empty message', () => {
+      expect(isScamCheckResult(scoreScamSignals(signals('urgency'), ''))).toBe(true);
+    });
+  });
+});
+
 describe('createCheckScamSignalsTool', () => {
   const options = { toolCallId: 'test-call', messages: [], context: {} };
 
@@ -526,6 +614,20 @@ describe('createCheckScamSignalsTool', () => {
     expect(result).toEqual(
       scoreScamSignals(signals('overpayment_or_refund'), MESSAGE),
     );
+  });
+
+  it('returns a result the card must reject when the review flag asks for one', async () => {
+    const checkScamSignals = createCheckScamSignalsTool({
+      clientMessage: MESSAGE,
+      simulateBadResult: true,
+    });
+
+    const result = await checkScamSignals.execute?.(
+      { signals: signals('urgency') },
+      options,
+    );
+
+    expect(isScamCheckResult(result)).toBe(false);
   });
 
   it('throws a clear error when the review flag asks it to fail', async () => {
