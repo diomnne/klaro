@@ -20,6 +20,7 @@ import type { KlaroUIMessage } from '@/lib/ai/klaro';
 import {
   SIGNAL_IDS,
   SIGNALS,
+  isScamCheckResult,
   type ScamCheckLevel,
   type ScamCheckResult,
   type ScamCheckSignal,
@@ -95,6 +96,24 @@ function groupBySignal(
   return groups;
 }
 
+/** The partial input while it streams: whatever is there, or nothing. */
+function partialSignalsOf(input: unknown): PartialSignal[] {
+  const signals = (input as { signals?: unknown } | undefined)?.signals;
+
+  return Array.isArray(signals) ? (signals as PartialSignal[]) : [];
+}
+
+/** The complete input: only entries that name a known signal and quote a string. */
+function checkedSignalsOf(
+  input: unknown,
+): Array<{ id: SignalId; evidence: string }> {
+  return partialSignalsOf(input).flatMap((signal) =>
+    isSignalId(signal?.id) && typeof signal.evidence === 'string'
+      ? [{ id: signal.id, evidence: signal.evidence }]
+      : [],
+  );
+}
+
 /**
  * Which view a part gets. An input state that is no longer streaming was cut
  * off, e.g. a transcript saved mid-stream and restored on reload. That gets the
@@ -104,14 +123,19 @@ function viewStateOf(part: ScamCheckPart, isLive: boolean): ViewState {
   switch (part.state) {
     case 'input-streaming':
       return isLive
-        ? { view: 'reading', signals: part.input?.signals ?? [] }
+        ? { view: 'reading', signals: partialSignalsOf(part.input) }
         : { view: 'error' };
     case 'input-available':
       return isLive
-        ? { view: 'checking', signals: part.input.signals }
+        ? { view: 'checking', signals: checkedSignalsOf(part.input) }
         : { view: 'error' };
+    // The type says this is a result; a saved transcript, an older version of
+    // the app or a misbehaving tool may say otherwise, and rendering a
+    // malformed one would crash the chat. So it's checked, not trusted.
     case 'output-available':
-      return { view: 'result', result: part.output };
+      return isScamCheckResult(part.output)
+        ? { view: 'result', result: part.output }
+        : { view: 'error' };
     // output-error, plus the approval states, which this tool never enters
     // because it doesn't ask for approval.
     default:
