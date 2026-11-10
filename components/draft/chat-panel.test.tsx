@@ -55,7 +55,7 @@ async function sendMessage(text: string): Promise<void> {
   const box = await screen.findByPlaceholderText(/Paste the DM/);
 
   fireEvent.change(box, { target: { value: text } });
-  fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
 }
 
 describe('ChatPanel when a reply fails partway', () => {
