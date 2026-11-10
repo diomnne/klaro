@@ -118,6 +118,9 @@ export function ChatComposer({ status, onSend, onStop }: ChatComposerProps) {
         <PromptInputTextarea
           aria-describedby="composer-help"
           aria-invalid={length.tooLong}
+          // A placeholder isn't a label: it disappears once typing starts, and
+          // not every screen reader falls back to it.
+          aria-label="Message"
           className="text-base md:text-base"
           id={COMPOSER_ID}
           onFocus={handleFocus}
@@ -155,6 +158,8 @@ export function ChatComposer({ status, onSend, onStop }: ChatComposerProps) {
             from `status` alone; without it the stop button just submits the
             empty form. While generating the button is Stop, so it stays enabled. */}
         <PromptInputSubmit
+          // Overrides the vendored "Submit", which says nothing about what's sent.
+          aria-label={isGenerating ? 'Stop' : 'Send message'}
           className="size-11 sm:size-8"
           disabled={!isGenerating && cannotSend}
           onStop={onStop}
