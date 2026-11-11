@@ -79,10 +79,43 @@ public/                 static assets
 
 - When adapting a formula from one entity to a structurally different one (e.g. reusing a portrait's pricing formula for a different commission type), don't assume the same underlying assumptions carry over. Write the zero/boundary-value test case first, before implementing — before trusting the math.
 
-## Commits
+## Git workflow and versioning
 
-- [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/): `type: description` — `feat`, `fix`, `docs`, `chore`, `refactor`, `style`, `test`.
+### Branches and pull requests
+
+- `main` holds releases only. Nothing lands on it except a release merge from `dev`.
+- `dev` is the integration branch. Cut feature branches from `dev` (`feat/…`, `fix/…`, `docs/…`, `test/…`, `chore/…`) and open PRs back into `dev`.
+- Every PR must pass the required `ci` check (lint, unit and component tests, build, e2e) before merging.
+- Merge PRs with a merge commit, not squash or rebase, so each branch's individual commits stay in history.
+
+### Commits
+
+- [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/): `type(scope): description` — `feat`, `fix`, `docs`, `chore`, `refactor`, `style`, `test`, `ci`, `perf`.
 - One logical change per commit.
+- Only the maintainer commits, stages, pushes, tags and merges. AI agents never run git commands that change the repo or the remote. They propose commits at the end of a task as copy-ready `git add` / `git commit` commands.
+
+### Changelog
+
+- `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/).
+- For every change you make, add a line under `## [Unreleased]` in the matching group (`Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, `Security`). Write one plain line on what changed for a user or developer, with no file names.
+
+### Releasing vX.Y.Z
+
+1. From an up-to-date `dev`, create `chore/release-X.Y.Z`.
+2. Run `npm version X.Y.Z --no-git-tag-version` so `package.json` and `package-lock.json` both carry the new version.
+3. In `CHANGELOG.md`, move everything under `[Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section and leave `[Unreleased]` empty. Update the compare links at the bottom: `[Unreleased]` compares `vX.Y.Z...HEAD`, and add `[X.Y.Z]` comparing the previous tag to `vX.Y.Z`.
+4. Commit as `chore(release): X.Y.Z`, open a PR into `dev`, and merge it once `ci` passes.
+5. Open a PR from `dev` into `main` titled `Release vX.Y.Z` and merge it with a merge commit.
+6. Tag the merge commit on `main` with an annotated tag, then push that tag by name. Don't use `--tags`.
+   ```sh
+   git switch main && git pull
+   git tag -a vX.Y.Z -m "Release vX.Y.Z"
+   git push origin vX.Y.Z
+   ```
+7. Create a GitHub release from the tag, with the `[X.Y.Z]` changelog section as the notes. While the version is `0.x`, mark it as a pre-release:
+   ```sh
+   gh release create vX.Y.Z --title "vX.Y.Z" --notes-file <section.md> --prerelease
+   ```
 
 ## Working with the AI assistant
 
