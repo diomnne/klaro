@@ -60,10 +60,6 @@ export function useGuardedRetry({
   useEffect(() => () => window.clearTimeout(timerRef.current), []);
 
   const retry = useCallback(() => {
-    if (lockRef.current) {
-      return;
-    }
-
     lockRef.current = true;
     sawBusyRef.current = false;
     errorAtPressRef.current = error;
