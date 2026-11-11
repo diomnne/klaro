@@ -1,5 +1,7 @@
 # Klaro
 
+[![CI](https://github.com/diomnne/klaro/actions/workflows/ci.yml/badge.svg)](https://github.com/diomnne/klaro/actions/workflows/ci.yml)
+
 An AI tool for independent visual artists in the Philippines that reads a client's commission DM before you reply. Klaro checks the message for common scam patterns aimed at artists, then helps turn a genuine request into a clear written agreement that protects both the artist and the client. It documents terms. It never prices or judges a commission, and it isn't a legally binding contract.
 
 > **Status: alpha.** The streaming chat and the scam-signal check are live. Agreement extraction, the completeness check, and the agreement card are in progress.
@@ -35,7 +37,10 @@ Then open [http://localhost:3000](http://localhost:3000).
 | `npm run dev` | Start the dev server |
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
-| `npm test` | Run the unit tests (Vitest) |
+| `npm run typecheck` | TypeScript, without building |
+| `npm test` | Unit and component tests (Vitest) |
+| `npm run test:coverage` | The same, with a line-coverage report (in `coverage/`) |
+| `npm run test:e2e` | End-to-end tests (Playwright), against a production build |
 
 ## Usage
 
@@ -164,6 +169,31 @@ The layout is built conservatively for Mobile Safari (the panel is sized from `w
 10. Tap Retry twice quickly: one request is sent (check the server log).
 11. Check nothing sits under the notch or the home indicator, in portrait and landscape, on the home page, `/draft`, a missing page (`/nothing`) and while scrolled to the bottom. The app sets `viewport-fit=cover` and pads the page by `env(safe-area-inset-*)`, and the composer keeps its own bottom padding. Chrome's emulated insets pass; this checks real hardware. The global error page (`app/global-error.tsx`) has the same padding but is the one page I couldn't render to check.
 12. In a Private tab (storage limited), the chat still works.
+
+## Testing
+
+No test needs an API key, and none can reach the AI.
+
+```bash
+npm test                              # unit and component tests
+npm run test:coverage                 # the same, plus a coverage report in coverage/
+npm run test:e2e                      # end-to-end, Desktop Chrome and Mobile Safari
+npx playwright install chromium webkit   # once, before the first e2e run
+```
+
+**Unit and component tests** (Vitest, jsdom, Testing Library) live next to the code as `*.test.ts(x)`. The component tests find things the way an artist or a screen reader does (by role, label or visible text, never by class or test ID), and each one checks something you'd notice on screen: the composer's limits and redaction, every state of the chat panel, each state of the scam-check card, and the "Start a new draft" dialog. Coverage counts `components/` and `lib/`, leaving out the vendored `components/ui` and `components/ai-elements`.
+
+**End-to-end** (`e2e/primary-flow.spec.ts`) builds the app, starts it with `next start` on port 3100, and walks the main flow in Chrome and in WebKit as an iPhone 15: first-run state, fill an example, send, see the scam-check result and the reply, start a new draft. It fails on any console error. `npm run test:e2e` builds first, so it takes a minute.
+
+**What's mocked, and why.** The AI is the one thing replaced, everywhere:
+
+- Component tests stub `fetch`, which the chat's transport uses to post to `/api/chat`, and answer with a real UI message stream built from parts (text, the scam-check tool part in each state, errors, finish) by `tests/helpers/ui-message-stream.ts`. Its chunks are typed against the AI SDK's own stream types, so a format change breaks the build instead of quietly passing.
+- `tests/setup.ts` replaces `fetch` in every test with one that refuses. A test that forgets to mock fails, even though the chat would have shown a polite error.
+- The e2e test intercepts `POST /api/chat` in the browser (`page.route`) and replies with a canned stream and the stream headers. The request never reaches the server, so the real route, Gemini and the API key are never involved.
+
+Everything else is real: redaction, error classification, local storage, the stream parser and rendering. The tests exercise the app's own code, not a copy of it.
+
+**CI** (`.github/workflows/ci.yml`) runs on pushes and pull requests to `dev` and `main`: lint, unit and component tests, `next build` (which also type-checks), then the e2e tests in both browsers. If it fails, the Playwright report and traces are uploaded as an artifact. The job is named `ci` so it can be marked as a required check.
 
 ## Privacy
 
