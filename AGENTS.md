@@ -96,14 +96,31 @@ public/                 static assets
 
 ### Changelog
 
-- `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and [Semantic Versioning](https://semver.org/).
-- For every change you make, add a line under `## [Unreleased]` in the matching group (`Added`, `Changed`, `Fixed`, `Removed`, `Deprecated`, `Security`). Write one plain line on what changed for a user or developer, with no file names.
+`CHANGELOG.md` is written as release notes and uses [Semantic Versioning](https://semver.org/). This format is the standard for every release.
+
+Each version sits under `## [X.Y.Z] - YYYY-MM-DD` and contains, in this order:
+
+1. One sentence, with no heading, summarizing what the release does for the user.
+2. `### What's new`: bullets that each start with a **bold lead-in**, then one or two plain sentences about what changed for the user or reviewer.
+3. `### Bugs fixed`: plain bullets, each saying what was broken.
+4. `### Reviewing …`: only when the release adds something a reviewer can trigger, such as a review flag. A short table with a URL column and a "What you'll see" column. Leave the section out when the release adds nothing to trigger.
+5. `### Verification`: only results measured for that version, such as test counts, lint and build, layout shift or widths checked. Say "measured locally" where that's true.
+6. `### Known limits`: what's untested or constrained, stated plainly.
+7. `### Not in this release`: one line.
+
+`## [Unreleased]` stays at the top. While work is in progress it only has `### What's new` and `### Bugs fixed`. For every change you make, add a bullet there. The summary sentence and the other sections are written at release time. Keep the compare links at the bottom.
+
+Rules:
+
+- Never write bracketed placeholders, or claims about manual testing you can't verify (live-site checks, physical devices, network tests). If a section needs one, ask the maintainer instead.
+- Don't invent numbers. Use the test counts, measurements and results from that version's commits, README and reports.
+- No file names in the user-facing bullets.
 
 ### Releasing vX.Y.Z
 
 1. From an up-to-date `dev`, create `chore/release-X.Y.Z`.
 2. Run `npm version X.Y.Z --no-git-tag-version` so `package.json` and `package-lock.json` both carry the new version.
-3. In `CHANGELOG.md`, move everything under `[Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section and leave `[Unreleased]` empty. Update the compare links at the bottom: `[Unreleased]` compares `vX.Y.Z...HEAD`, and add `[X.Y.Z]` comparing the previous tag to `vX.Y.Z`.
+3. In `CHANGELOG.md`, move everything under `[Unreleased]` into a new `## [X.Y.Z] - YYYY-MM-DD` section and leave `[Unreleased]` empty. Write the summary sentence, then the Reviewing (if needed), Verification, Known limits and Not in this release sections, following the format above. Update the compare links at the bottom: `[Unreleased]` compares `vX.Y.Z...HEAD`, and add `[X.Y.Z]` comparing the previous tag to `vX.Y.Z`.
 4. Commit as `chore(release): X.Y.Z`, open a PR into `dev`, and merge it once `ci` passes.
 5. Open a PR from `dev` into `main` titled `Release vX.Y.Z` and merge it with a merge commit.
 6. Tag the merge commit on `main` with an annotated tag, then push that tag by name. Don't use `--tags`.
